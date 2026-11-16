@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- helpers ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    // Any signed-in user of this campus (single campus today: campus_batstateu).
+    function isCampus(cid) {
+      return signedIn() && cid == 'campus_batstateu';
+    }
+    function role() {
+      return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.role;
+    }
+    function stallId() {
+      return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.get('stallId', '');
+    }
+    function isMainAdmin() {
+      return signedIn() && role() == 'mainAdmin';
+    }
+    function isStallAdmin() {
+      return signedIn() && role() == 'stallAdmin';
+    }
+    function isStaff() {
+      return isMainAdmin() || isStallAdmin();
+    }
+
+    // ---------- public, pre-login readable (campus info, stalls, menu, slots) ----------
+    match /campuses/{id} {
+      allow read: if true;
+      allow write: if isMainAdmin();
+    }
+    match /stalls/{id} {
+      allow read: if true;
+      allow create, delete: if isMainAdmin();
+      // Stall admins may update ONLY the photo + pickup schedule (storefront, hours, per-window limit).
+      allow update: if isMainAdmin()
+        || (isStallAdmin() && resource.id == stallId() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photo', 'openMin', 'closeMin', 'slotCapacity']));
+    }
+    match /dishes/{id} {
+      allow read: if true;
+      // Stall admins manage their own stall's dishes; main admin manages all.
+      allow create: if isMainAdmin() || (isStallAdmin() && request.resource.data.stallId == stallId());
+      allow update, delete: if isMainAdmin() || (isStallAdmin() && resource.data.stallId == stallId());
+      // Checkout: a signed-in customer may ONLY decrement servingsLeft (never raise it, never touch anything else).
+      allow update: if isCampus(resource.data.campusId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['servingsLeft'])
+        && request.resource.data.servingsLeft <= resource.data.servingsLeft;
+    }
+    match /slots/{id} {
+      allow read: if true;
+      // Slot docs are created by the app on sign-in; they must look sane.
+      // The create payload deliberately omits `booked` (fresh counters) — a missing
+      // field in a rules comparison errors out, so an absent booked must be allowed too.
+      allow create: if isCampus(request.resource.data.campusId)
+        && request.resource.data.capacity is int
+        && request.resource.data.capacity >= 1
+        && request.resource.data.capacity <= 200
+        && (!('booked' in request.resource.data) || request.resource.data.booked == 0)
+        && request.resource.data.date is string
+        && request.resource.data.startMin is int;
+      // Updates: identity fields immutable; booked can only go up by at most 1 per transaction.
+      // Handles legacy slot docs that predate booked/open fields (they were fenced off on purpose).
+      allow update: if isCampus(resource.data.campusId)
+        && request.resource.data.capacity == resource.data.capacity
+        && request.resource.data.date == resource.data.date
+        && request.resource.data.startMin == resource.data.startMin
+        && (
+             // Legacy window without counters being repaired (bounded counter value).
+             (!('booked' in resource.data) && request.resource.data.booked is int && request.resource.data.booked <= 1)
+             // Normal path: counter unchanged or incremented by exactly 1.
+             || (request.resource.data.booked is int && request.resource.data.booked <= resource.data.booked + 1)
+           )
+        && (
+             // open may only ever flip to false, or heal from missing → true on legacy docs.
+             request.resource.data.open == false
+             || (!('open' in resource.data) && request.resource.data.open == true)
+             || request.resource.data.open == resource.data.open
+           );
+      allow delete: if isMainAdmin();
+    }
+
+    // ---------- private docs: role-scoped ----------
+    match /accounts/{id} {
+      // Own doc, or your own doc looked up by email, or staff (they manage accounts / verify claims).
+      allow read: if signedIn() && (request.auth.uid == id || isStaff() || resource.data.email == request.auth.token.email);
+      // Admin creates any account; a new user may create ONLY their own customer profile.
+      allow create: if isMainAdmin()
+        || (signedIn() && request.auth.uid == id && request.resource.data.role == 'customer');
+      allow update, delete: if isMainAdmin();
+    }
+    match /orders/{id} {
+      allow read: if signedIn() && (isMainAdmin()
+        || (isStallAdmin() && resource.data.stallId == stallId())
+        || resource.data.customerId == request.auth.uid);
+      // Customers place their own orders, always starting as Preparing.
+      allow create: if isCampus(request.resource.data.campusId)
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.status == 'preparing';
+      // Only staff move orders forward (ready/claimed/released), and stall admins only their own stall.
+      allow update: if isMainAdmin() || (isStallAdmin() && resource.data.stallId == stallId());
+      allow delete: if isMainAdmin();
+    }
+    match /payouts/{id} {
+      allow read: if isMainAdmin() || (isStallAdmin() && resource.data.stallId == stallId());
+      allow write: if isMainAdmin();
+    }
+    match /notifications/{id} {
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      // You may notify yourself; staff may notify the customer (order placed / ready / claimed / expired).
+      allow create: if isCampus(request.resource.data.campusId)
+        && (request.resource.data.userId == request.auth.uid || isStaff());
+      allow update: if signedIn() && (resource.data.userId == request.auth.uid || isStaff());
+      allow delete: if isMainAdmin();
+    }
+    match /counters/{id} {
+      // Order-number sequence, shared across the campus (transaction-incremented at order time).
+      allow read, write: if isCampus(id);
+    }
+    match /meta/{id} {
+      allow read: if true;
+      allow write: if isMainAdmin();
+    }
+  }
+}

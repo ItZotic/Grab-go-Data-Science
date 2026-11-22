@@ -601,7 +601,7 @@ class Database {
   static bool _ready = false;
   static bool get ready => _ready;
 
-  static const builtInAdminEmail = 'admin@batstate-u.edu.ph';
+  static const builtInAdminEmail = 'admin@gmail.com';
   static const builtInAdminPassword = 'Grab&Go#Admin2026';
   static const builtInCampusId = 'campus_batstateu';
 

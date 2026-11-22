@@ -75,19 +75,35 @@ class SplashScreen extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onSkip,
         child: SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              const GrabLogo(size: 118, splash: true),
-              const SizedBox(height: 22),
-              const Text('Grab&Go', style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppColors.navy900, letterSpacing: -1.2, height: 1)),
-              const SizedBox(height: 8),
-              const Text('Order ahead. Eat longer.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.navy800)),
-              const Spacer(),
-              const Text('Break-time Allocation & Self-Service', textAlign: TextAlign.center, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.navy800)),
-              const SizedBox(height: 2),
-              const Text('Campus Cafeteria Ordering System', textAlign: TextAlign.center, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.navy800)),
-              const SizedBox(height: 26),
+              // Brand block centered in the available space.
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  GrabLogo(size: 118, splash: true),
+                  SizedBox(height: 22),
+                  Text('Grab&Go', style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppColors.navy900, letterSpacing: -1.2, height: 1)),
+                  SizedBox(height: 8),
+                  Text('Order ahead. Eat longer.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.navy800)),
+                ],
+              ),
+              // Footer pinned to the bottom.
+              const Positioned(
+                bottom: 26,
+                left: 18,
+                right: 18,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Break-time Allocation & Self-Service', textAlign: TextAlign.center, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.navy800)),
+                    SizedBox(height: 2),
+                    Text('Campus Cafeteria Ordering System', textAlign: TextAlign.center, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.navy800)),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -164,8 +180,6 @@ class _ChooseRoleScreenState extends State<ChooseRoleScreen> {
                 label: 'Continue as ${roleLabelOf(_selected)}',
                 onPressed: () => widget.onContinue(_selected),
               ),
-              const SizedBox(height: 10),
-              const Center(child: Text('You can change this on the next screen.', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.navy800))),
             ],
           ),
         ),

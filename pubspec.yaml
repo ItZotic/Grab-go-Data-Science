@@ -46,6 +46,12 @@ dependencies:
   # Real QR codes on receipts (pure Dart)
   qr_flutter: ^4.1.0
 
+  # Decode QR codes from uploaded receipt photos
+  qr_code_dart_decoder: ^0.3.0
+
+  # Live camera preview + real-time QR detection with flashlight (Android/iOS)
+  mobile_scanner: ^5.0.0
+
   # Share generated CSV reports via the OS share sheet
   share_plus: ^10.0.0
 
@@ -54,7 +60,6 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   hive_flutter: ^1.1.0
-  qr_code_dart_decoder: ^0.3.0
 
 dev_dependencies:
   flutter_test:

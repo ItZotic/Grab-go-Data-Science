@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_code_dart_decoder/qr_code_dart_decoder.dart';
 
 import '../app_state.dart';
@@ -32,11 +33,40 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
   String? _scannedOrder;
   bool _flashOn = false;
 
+  /// Live camera controller — real-time QR detection + torch.
+  final MobileScannerController _camera = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+    facing: CameraFacing.back,
+    torchEnabled: false,
+  );
+
   @override
   void dispose() {
     _line.dispose();
     _ctrl.dispose();
+    _camera.dispose();
     super.dispose();
+  }
+
+  /// One QR detection from the live camera. Guarded so one receipt can't pop twice.
+  void _onDetect(BarcodeCapture capture) {
+    if (_scannedOrder != null || _isScanning) return;
+    for (final barcode in capture.barcodes) {
+      final value = barcode.rawValue;
+      if (value == null || value.isEmpty) continue;
+      _camera.stop();
+      _handleSuccess(value);
+      return;
+    }
+  }
+
+  Future<void> _toggleFlash() async {
+    try {
+      await _camera.toggleTorch();
+      if (mounted) setState(() => _flashOn = !_flashOn);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'This device has no torch on the back camera.');
+    }
   }
 
   void _submit() {
@@ -152,7 +182,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                   ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () => setState(() => _flashOn = !_flashOn),
+                    onTap: _toggleFlash,
                     child: Row(
                       children: [
                         Icon(_flashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded, size: 16, color: _flashOn ? AppColors.yellow : Colors.white54),
@@ -171,80 +201,83 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
 
               Center(
                 child: SizedBox(
-                  width: 260,
-                  height: 260,
-                  child: LayoutBuilder(
-                    builder: (context, c) {
-                      final s = c.maxWidth;
-                      const bracket = 46.0;
-                      return GestureDetector(
-                        onTap: _isScanning ? null : () => _scanFromImageSource(ImageSource.camera),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              width: s * 0.85,
-                              height: s * 0.85,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: _flashOn ? Colors.white.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.04),
-                                boxShadow: _flashOn ? [BoxShadow(color: Colors.white.withValues(alpha: 0.15), blurRadius: 30, spreadRadius: 5)] : null,
-                              ),
+                  width: 280,
+                  height: 280,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Real live camera feed with automatic QR detection.
+                        MobileScanner(
+                          controller: _camera,
+                          onDetect: _onDetect,
+                          errorBuilder: (context, error, _) => Container(
+                            color: const Color(0xFF1D1D32),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'Camera unavailable: ${error.errorCode}\nUse Upload photo or type the order number below.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.4),
                             ),
-                            ..._corners(s, bracket),
-
-                            if (_isScanning)
-                              const Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircularProgressIndicator(color: AppColors.yellow, strokeWidth: 3),
-                                  SizedBox(height: 12),
-                                  Text('Reading QR code…', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                                ],
-                              )
-                            else if (_scannedOrder != null)
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.check_circle_rounded, color: AppColors.green, size: 54),
-                                  const SizedBox(height: 8),
-                                  Text('Scanned $_scannedOrder!', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
-                                ],
-                              )
-                            else ...[
-                              AnimatedBuilder(
-                                animation: _line,
-                                builder: (context, _) {
-                                  final t = Curves.easeInOutSine.transform(_line.value);
-                                  final y = (s * 0.12) + t * (s * 0.76 - s * 0.12);
-                                  return Positioned(
-                                    top: y,
-                                    left: s * 0.1,
-                                    right: s * 0.1,
-                                    child: Container(
-                                      height: 3,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(2),
-                                        gradient: const LinearGradient(colors: [Colors.transparent, AppColors.yellow, Colors.transparent]),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.qr_code_scanner_rounded, size: 48, color: Colors.white.withValues(alpha: 0.2)),
-                                  const SizedBox(height: 6),
-                                  Text('Tap to scan with camera', style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11, fontWeight: FontWeight.w600)),
-                                ],
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
-                      );
-                    },
+                        // Scan brackets on top of the feed.
+                        ..._corners(280, 46),
+                        AnimatedBuilder(
+                          animation: _line,
+                          builder: (context, _) {
+                            final t = Curves.easeInOutSine.transform(_line.value);
+                            return Positioned(
+                              top: 40 + t * 200,
+                              left: 28,
+                              right: 28,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(2),
+                                  gradient: const LinearGradient(colors: [Colors.transparent, AppColors.yellow, Colors.transparent]),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        if (_isScanning)
+                          Container(
+                            color: const Color(0x9911111F),
+                            child: const Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(color: AppColors.yellow, strokeWidth: 3),
+                                SizedBox(height: 12),
+                                Text('Reading QR code…', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                              ],
+                            ),
+                          )
+                        else if (_scannedOrder != null)
+                          Container(
+                            color: const Color(0xCC11111F),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: AppColors.green, size: 54),
+                                const SizedBox(height: 8),
+                                Text('Scanned $_scannedOrder!', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: Text(
+                  'Point the camera at the QR on the customer’s receipt — it scans automatically.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 16),
@@ -253,9 +286,17 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _isScanning ? null : () => _scanFromImageSource(ImageSource.camera),
+                      onPressed: () {
+                        // Live camera scans automatically; this just resets after a scan/error.
+                        setState(() {
+                          _scannedOrder = null;
+                          _error = null;
+                          _isScanning = false;
+                        });
+                        _camera.start();
+                      },
                       icon: const Icon(Icons.camera_alt_rounded, size: 18),
-                      label: const Text('Camera scan'),
+                      label: const Text('Restart camera'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.yellow,
                         foregroundColor: AppColors.navy900,

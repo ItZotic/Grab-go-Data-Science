@@ -139,7 +139,7 @@ class _PrepListScreenState extends State<PrepListScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                         itemCount: windowOrders.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, second) => const SizedBox(height: 10),
                         itemBuilder: (context, i) => _PrepCard(order: windowOrders[i], onClaimTap: (orderNo) => widget.onOpenVerify(orderNo)),
                       ),
               ),
@@ -183,7 +183,7 @@ class _PrepCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ready ? AppColors.green.withOpacity(0.5) : AppColors.line, width: ready ? 1.6 : 1),
+        border: Border.all(color: ready ? AppColors.green.withValues(alpha: 0.5) : AppColors.line, width: ready ? 1.6 : 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

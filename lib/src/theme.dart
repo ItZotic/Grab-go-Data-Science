@@ -85,7 +85,7 @@ class AppTheme {
         focusedErrorBorder: _border(AppColors.red, 1.6),
         errorStyle: const TextStyle(color: AppColors.red, fontWeight: FontWeight.w600, fontSize: 11),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -119,7 +119,7 @@ class AppTheme {
         side: const BorderSide(color: AppColors.muted, width: 1.6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),

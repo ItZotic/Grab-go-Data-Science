@@ -187,8 +187,8 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                               height: s * 0.85,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: _flashOn ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.04),
-                                boxShadow: _flashOn ? [BoxShadow(color: Colors.white.withOpacity(0.15), blurRadius: 30, spreadRadius: 5)] : null,
+                                color: _flashOn ? Colors.white.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.04),
+                                boxShadow: _flashOn ? [BoxShadow(color: Colors.white.withValues(alpha: 0.15), blurRadius: 30, spreadRadius: 5)] : null,
                               ),
                             ),
                             ..._corners(s, bracket),
@@ -234,9 +234,9 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                               Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.qr_code_scanner_rounded, size: 48, color: Colors.white.withOpacity(0.2)),
+                                  Icon(Icons.qr_code_scanner_rounded, size: 48, color: Colors.white.withValues(alpha: 0.2)),
                                   const SizedBox(height: 6),
-                                  Text('Tap to scan with camera', style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 11, fontWeight: FontWeight.w600)),
+                                  Text('Tap to scan with camera', style: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 11, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ],
@@ -273,7 +273,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                       label: const Text('Upload photo'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: BorderSide(color: Colors.white.withOpacity(0.35), width: 1.4),
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.35), width: 1.4),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
@@ -287,7 +287,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                 const SizedBox(height: 16),
                 Text(
                   'Orders ready for handout (tap to scan):',
-                  style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 11.5, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 11.5, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 8),
                 SizedBox(
@@ -295,7 +295,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: readyOrders.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, second) => const SizedBox(width: 8),
                     itemBuilder: (context, i) {
                       final o = readyOrders[i];
                       return ActionChip(
@@ -330,7 +330,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                         hintText: 'Type order number, e.g. GG-0427',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.08),
+                        fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.yellow, width: 1.6)),
@@ -357,7 +357,7 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                 child: Text(
                   'Supports live camera capture, photo upload, and instant receipt verification.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10.5, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ],

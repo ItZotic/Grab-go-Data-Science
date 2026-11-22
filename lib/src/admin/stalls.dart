@@ -91,7 +91,7 @@ class _StallsScreenState extends State<StallsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(18), border: Border.all(color: suspended ? AppColors.red.withOpacity(0.35) : AppColors.line)),
+        decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(18), border: Border.all(color: suspended ? AppColors.red.withValues(alpha: 0.35) : AppColors.line)),
         child: Row(
           children: [
             StallArtCircle(stall: stall, size: 56),

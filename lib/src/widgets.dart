@@ -23,23 +23,15 @@ class GrabLogo extends StatelessWidget {
           borderRadius: BorderRadius.circular(size * 0.22),
           boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 18, offset: Offset(0, 6))],
         ),
-<<<<<<< Updated upstream
-        child: CustomPaint(painter: _BagLogoPainter(), size: Size(size, size)),
-=======
+        // The real Grab&Go logo image (from the camera/printer-ready PNG); the
+        // painted bag mark stays as a fallback if the asset is ever missing.
         child: Image.asset(
-          'assets/images/gtg_logo.png',
+          'assets/images/gtg logo.png',
           width: size,
           height: size,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Image.asset(
-            'assets/images/logo.png',
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => CustomPaint(painter: _BagLogoPainter(), size: Size(size, size)),
-          ),
+          errorBuilder: (_, second, third) => CustomPaint(painter: _BagLogoPainter(), size: Size(size, size)),
         ),
->>>>>>> Stashed changes
       ),
     );
   }
@@ -288,7 +280,7 @@ class DishArt extends StatelessWidget {
                 Image.memory(bytes, fit: BoxFit.cover, errorBuilder: (_, second, third) => const Icon(Icons.broken_image_rounded)),
                 if (soldOut)
                 if (soldOut)
-                  Container(color: AppColors.navy900.withOpacity(0.35), alignment: Alignment.center, child: const Icon(Icons.block_rounded, color: Colors.white, size: 22)),
+                  Container(color: AppColors.navy900.withValues(alpha: 0.35), alignment: Alignment.center, child: const Icon(Icons.block_rounded, color: Colors.white, size: 22)),
               ],
             ),
           ),
@@ -305,10 +297,10 @@ class DishArt extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned(right: -size * 0.25, top: -size * 0.25, child: Container(width: size * 0.75, height: size * 0.75, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withOpacity(0.22)))),
+            Positioned(right: -size * 0.25, top: -size * 0.25, child: Container(width: size * 0.75, height: size * 0.75, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.22)))),
             Center(child: Icon(kDishIcons[iconIndex % kDishIcons.length], color: Colors.white, size: size * 0.45)),
             if (soldOut)
-              Container(color: AppColors.navy900.withOpacity(0.35), alignment: Alignment.center, child: const Icon(Icons.block_rounded, color: Colors.white, size: 22)),
+              Container(color: AppColors.navy900.withValues(alpha: 0.35), alignment: Alignment.center, child: const Icon(Icons.block_rounded, color: Colors.white, size: 22)),
           ],
         ),
       ),
@@ -398,7 +390,7 @@ class GhostButton extends StatelessWidget {
         label: Text(label),
         style: OutlinedButton.styleFrom(
           foregroundColor: color,
-          side: BorderSide(color: color.withOpacity(0.6), width: 1.4),
+          side: BorderSide(color: color.withValues(alpha: 0.6), width: 1.4),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
         ),
@@ -447,7 +439,7 @@ class Pill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = soft ?? color.withOpacity(0.12);
+    final bg = soft ?? color.withValues(alpha: 0.12);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
@@ -541,7 +533,7 @@ class SectionRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.2))),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );

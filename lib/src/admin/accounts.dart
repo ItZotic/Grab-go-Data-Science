@@ -98,7 +98,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
                         itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        separatorBuilder: (_, second) => const SizedBox(height: 8),
                         itemBuilder: (context, i) => _AccountRow(
                           account: filtered[i],
                           onReset: () => _resetPassword(context, filtered[i]),
@@ -219,7 +219,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       const Text('No active stalls yet — create one on the Stalls tab first.', style: TextStyle(fontSize: 11.5, color: AppColors.redDark, fontWeight: FontWeight.w700))
                     else
                       DropdownButtonFormField<Stall>(
-                        value: assignedStall,
+                        initialValue: assignedStall,
                         decoration: const InputDecoration(labelText: 'Assign to stall'),
                         items: stalls.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
                         onChanged: (s) => assignedStall = s,
@@ -314,7 +314,7 @@ class _AccountRow extends StatelessWidget {
       ],
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: inactive ? AppColors.pageSoft : AppColors.background, borderRadius: BorderRadius.circular(18), border: Border.all(color: inactive ? AppColors.red.withOpacity(0.3) : AppColors.line)),
+        decoration: BoxDecoration(color: inactive ? AppColors.pageSoft : AppColors.background, borderRadius: BorderRadius.circular(18), border: Border.all(color: inactive ? AppColors.red.withValues(alpha: 0.3) : AppColors.line)),
         child: Row(
           children: [
             AvatarCircle(name: account.name, size: 46, colorIndex: account.colorIndex),

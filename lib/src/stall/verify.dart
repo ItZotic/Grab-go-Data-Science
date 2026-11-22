@@ -241,7 +241,7 @@ class _ReceiptVerifyScreenState extends State<ReceiptVerifyScreen> {
           decoration: BoxDecoration(
             color: claimed ? AppColors.pageSoft : AppColors.greenSoft,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: claimed ? AppColors.line : AppColors.green.withOpacity(0.4), width: 1.4),
+            border: Border.all(color: claimed ? AppColors.line : AppColors.green.withValues(alpha: 0.4), width: 1.4),
           ),
           child: Column(
             children: [

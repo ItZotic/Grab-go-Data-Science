@@ -73,7 +73,7 @@ class StallMenuScreen extends StatelessWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
                         itemCount: dishes.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        separatorBuilder: (_, second) => const SizedBox(height: 12),
                         itemBuilder: (context, i) => _DishCard(dish: dishes[i], onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => DishFormScreen(dishId: dishes[i].id)))),
                       ),
               ),
@@ -435,7 +435,7 @@ class _DishFormScreenState extends State<DishFormScreen> {
             contentPadding: EdgeInsets.zero,
             value: _liveTray,
             activeTrackColor: AppColors.yellow,
-            activeColor: AppColors.navy900,
+            activeThumbColor: AppColors.navy900,
             onChanged: (v) => setState(() => _liveTray = v),
             title: const Text('Show on Live Tray Counter', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800)),
             subtitle: const Text('Customers see how many servings are left in real time.', style: TextStyle(fontSize: 11, color: AppColors.muted)),

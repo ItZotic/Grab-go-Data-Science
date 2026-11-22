@@ -419,7 +419,7 @@ class _LoginRegisterScreenState extends State<LoginRegisterScreen> {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.blue.withOpacity(0.3))),
+                        decoration: BoxDecoration(color: AppColors.blueSoft, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.blue.withValues(alpha: 0.3))),
                         child: Text(
                           widget.role == AccountRole.stallAdmin
                               ? 'Stall admin accounts are created by the main admin. Sign in with the credentials given to you.'

@@ -173,7 +173,7 @@ class _SlotSelectScreenState extends State<SlotSelectScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.event_busy_rounded, size: 44, color: AppColors.muted.withOpacity(0.7)),
+              Icon(Icons.event_busy_rounded, size: 44, color: AppColors.muted.withValues(alpha: 0.7)),
               const SizedBox(height: 14),
               const Text('No windows yet', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
@@ -230,7 +230,7 @@ class _SlotSelectScreenState extends State<SlotSelectScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                  decoration: BoxDecoration(color: AppColors.yellowSoft, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.yellowDeep.withOpacity(0.35))),
+                  decoration: BoxDecoration(color: AppColors.yellowSoft, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.yellowDeep.withValues(alpha: 0.35))),
                   child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

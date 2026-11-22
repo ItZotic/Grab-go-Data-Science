@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+ uses the SplashScreen system API instead of windowBackground.
-         Keep it plain yellow so there is no extra logo flash on every cold start. -->
+    <!-- Android 12+/13+ system splash: no icon, no white icon background, just brand yellow.
+         The logo appears once Flutter draws the auth splash. -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
         <item name="android:windowSplashScreenBackground">@color/launch_yellow</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_transparent</item>
     </style>
 </resources>

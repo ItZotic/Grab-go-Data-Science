@@ -80,7 +80,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Switch(
                   value: _pickupReminders,
                   activeTrackColor: AppColors.yellow,
-                  activeThumbColor: AppColors.navy900,
+                  activeColor: AppColors.navy900,
                   onChanged: (v) {
                     setState(() => _pickupReminders = v);
                     Database.appFirestore.collection('meta').doc(user.id).set({'pickupReminders': v}, SetOptions(merge: true));
@@ -119,7 +119,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(width: 38, height: 38, decoration: BoxDecoration(color: tint.withValues(alpha: 0.16), shape: BoxShape.circle), child: Icon(icon, size: 19, color: tint)),
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: tint.withOpacity(0.16), shape: BoxShape.circle), child: Icon(icon, size: 19, color: tint)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

@@ -62,7 +62,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(26),
                           gradient: LinearGradient(
-                            colors: [kDishGradients[dish.colorIndex % kDishGradients.length][0].withValues(alpha: 0.45), kDishGradients[dish.colorIndex % kDishGradients.length][1].withValues(alpha: 0.35)],
+                            colors: [kDishGradients[dish.colorIndex % kDishGradients.length][0].withOpacity(0.45), kDishGradients[dish.colorIndex % kDishGradients.length][1].withOpacity(0.35)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),

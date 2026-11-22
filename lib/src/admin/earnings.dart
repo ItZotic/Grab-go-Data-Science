@@ -119,7 +119,7 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
                             ],
                           ),
                         ),
-                        Container(width: 1, height: 46, color: Colors.white.withValues(alpha: 0.15)),
+                        Container(width: 1, height: 46, color: Colors.white.withOpacity(0.15)),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(

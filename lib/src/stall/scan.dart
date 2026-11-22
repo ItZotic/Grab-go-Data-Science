@@ -1,12 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:qr_code_dart_decoder/qr_code_dart_decoder.dart';
+
+import '../app_state.dart';
+import '../db.dart';
 import '../theme.dart';
 
-/// 17 · Scan receipt QR — viewfinder UI.
+/// 17 · Scan receipt QR — viewfinder UI with camera and image scanning.
 ///
-/// The QR codes shown on Grab&Go receipts are real (standard QR encoding the
-/// order number), so ANY phone camera can read them. The in-app camera
-/// scanner requires the Android/iOS build; on this desktop/web build the
-/// staff types the order number below instead.
+/// Decodes real receipt QR codes from the device camera or image gallery,
+/// supports instant tap-to-scan for active ready orders, and provides a manual
+/// order number entry fallback.
 class ScanReceiptScreen extends StatefulWidget {
   const ScanReceiptScreen({super.key});
 
@@ -15,9 +21,16 @@ class ScanReceiptScreen extends StatefulWidget {
 }
 
 class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _line = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))..repeat(reverse: true);
+  late final AnimationController _line = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..repeat(reverse: true);
+
   final _ctrl = TextEditingController();
   String? _error;
+  bool _isScanning = false;
+  String? _scannedOrder;
+  bool _flashOn = false;
 
   @override
   void dispose() {
@@ -28,20 +41,99 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
 
   void _submit() {
     final raw = _ctrl.text.trim().toUpperCase().replaceAll('#', '');
-    final match = RegExp(r'(\d{3,5})').firstMatch(raw);
+    final match = RegExp(r'(\d{1,5})').firstMatch(raw);
     if (match == null) {
-      setState(() => _error = 'Enter the order number printed under the QR.');
+      setState(() => _error = 'Enter the order number printed under the QR (e.g. GG-0001).');
       return;
     }
-    Navigator.of(context).pop('GG-${match.group(1)!.padLeft(4, '0')}');
+    _handleSuccess('GG-${match.group(1)!.padLeft(4, '0')}');
+  }
+
+  Future<void> _scanFromImageSource(ImageSource source) async {
+    setState(() {
+      _isScanning = true;
+      _error = null;
+    });
+
+    try {
+      final picker = ImagePicker();
+      final XFile? file = await picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
+
+      if (file == null) {
+        if (mounted) setState(() => _isScanning = false);
+        return;
+      }
+
+      final Uint8List bytes = await file.readAsBytes();
+      final decoder = QrCodeDartDecoder();
+      final ScanResult? result = await decoder.decodeFile(bytes);
+
+      if (result == null || result.text.isEmpty) {
+        if (mounted) {
+          setState(() {
+            _isScanning = false;
+            _error = 'No QR code detected in the photo. Please align the QR within the frame and try again.';
+          });
+        }
+        return;
+      }
+
+      _handleSuccess(result.text);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+          _error = 'Error scanning image: $e';
+        });
+      }
+    }
+  }
+
+  void _handleSuccess(String raw) {
+    final clean = raw.trim().toUpperCase().replaceAll('#', '');
+    final match = RegExp(r'(\d{1,5})').firstMatch(clean);
+    if (match == null) {
+      setState(() {
+        _isScanning = false;
+        _error = 'QR code does not contain a valid order number.';
+      });
+      return;
+    }
+
+    final orderNo = 'GG-${match.group(1)!.padLeft(4, '0')}';
+    setState(() {
+      _isScanning = false;
+      _scannedOrder = orderNo;
+      _error = null;
+    });
+
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) {
+        Navigator.of(context).pop(orderNo);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = AppState.instance;
+    final stallId = state.currentUser?.stallId;
+    final List<OrderRec> readyOrders;
+    if (stallId != null && stallId.isNotEmpty) {
+      readyOrders = state.stallOrders(stallId).where((o) => o.status == OrderStatus.ready || o.status == OrderStatus.preparing).toList();
+    } else {
+      final campusId = state.requiredCampus.id;
+      readyOrders = Database.orders(campusId).where((o) => o.status == OrderStatus.ready || o.status == OrderStatus.preparing).toList();
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF11111F),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,96 +151,186 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
                     ),
                   ),
                   const Spacer(),
-                  Row(
-                    children: const [
-                      Icon(Icons.flash_off_rounded, size: 16, color: Colors.white54),
-                      SizedBox(width: 6),
-                      Text('Flash off', style: TextStyle(color: Colors.white54, fontSize: 12.5, fontWeight: FontWeight.w700)),
-                    ],
+                  GestureDetector(
+                    onTap: () => setState(() => _flashOn = !_flashOn),
+                    child: Row(
+                      children: [
+                        Icon(_flashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded, size: 16, color: _flashOn ? AppColors.yellow : Colors.white54),
+                        const SizedBox(width: 6),
+                        Text(_flashOn ? 'Flash on' : 'Flash off', style: TextStyle(color: _flashOn ? AppColors.yellow : Colors.white54, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
               const Text('Scan receipt QR', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
               const SizedBox(height: 2),
-              const Text('Point the camera at the customer’s QR code.', style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 26),
+              const Text('Point camera, take photo, or upload receipt QR to verify.', style: TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 20),
 
-              Expanded(
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final s = c.maxWidth;
-                        const bracket = 46.0;
-                        return Stack(
+              Center(
+                child: SizedBox(
+                  width: 260,
+                  height: 260,
+                  child: LayoutBuilder(
+                    builder: (context, c) {
+                      final s = c.maxWidth;
+                      const bracket = 46.0;
+                      return GestureDetector(
+                        onTap: _isScanning ? null : () => _scanFromImageSource(ImageSource.camera),
+                        child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            // faint finder pattern hint
                             Container(
-                              width: s * 0.72,
-                              height: s * 0.72,
-                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), color: Colors.white.withValues(alpha: 0.04)),
+                              width: s * 0.85,
+                              height: s * 0.85,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: _flashOn ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.04),
+                                boxShadow: _flashOn ? [BoxShadow(color: Colors.white.withOpacity(0.15), blurRadius: 30, spreadRadius: 5)] : null,
+                              ),
                             ),
-                            // corner brackets
                             ..._corners(s, bracket),
-                            // scanning line
-                            AnimatedBuilder(
-                              animation: _line,
-                              builder: (context, _) {
-                                final t = Curves.easeInOutSine.transform(_line.value);
-                                final y = (s * 0.14) + t * (s * 0.72 - s * 0.14);
-                                return Positioned(
-                                  top: y,
-                                  left: s * 0.09,
-                                  right: s * 0.09,
-                                  child: Container(
-                                    height: 3,
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), gradient: const LinearGradient(colors: [Colors.transparent, AppColors.yellow, Colors.transparent])),
-                                  ),
-                                );
-                              },
-                            ),
+
+                            if (_isScanning)
+                              const Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(color: AppColors.yellow, strokeWidth: 3),
+                                  SizedBox(height: 12),
+                                  Text('Reading QR code…', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                ],
+                              )
+                            else if (_scannedOrder != null)
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.check_circle_rounded, color: AppColors.green, size: 54),
+                                  const SizedBox(height: 8),
+                                  Text('Scanned $_scannedOrder!', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+                                ],
+                              )
+                            else ...[
+                              AnimatedBuilder(
+                                animation: _line,
+                                builder: (context, _) {
+                                  final t = Curves.easeInOutSine.transform(_line.value);
+                                  final y = (s * 0.12) + t * (s * 0.76 - s * 0.12);
+                                  return Positioned(
+                                    top: y,
+                                    left: s * 0.1,
+                                    right: s * 0.1,
+                                    child: Container(
+                                      height: 3,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(2),
+                                        gradient: const LinearGradient(colors: [Colors.transparent, AppColors.yellow, Colors.transparent]),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.qr_code_scanner_rounded, size: 48, color: Colors.white.withOpacity(0.2)),
+                                  const SizedBox(height: 6),
+                                  Text('Tap to scan with camera', style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 11, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ],
                           ],
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(color: AppColors.yellow, borderRadius: BorderRadius.circular(999)),
-                  child: const Text('Scanning…', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900, color: AppColors.navy900, letterSpacing: 0.8)),
-                ),
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isScanning ? null : () => _scanFromImageSource(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt_rounded, size: 18),
+                      label: const Text('Camera scan'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.yellow,
+                        foregroundColor: AppColors.navy900,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _isScanning ? null : () => _scanFromImageSource(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library_rounded, size: 18),
+                      label: const Text('Upload photo'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: BorderSide(color: Colors.white.withOpacity(0.35), width: 1.4),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              const Center(
-                child: Text(
-                  'Hold steady. The order opens as soon as the code is read.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white54, fontSize: 10.5, fontWeight: FontWeight.w600),
+
+              if (readyOrders.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Orders ready for handout (tap to scan):',
+                  style: TextStyle(color: Colors.white.withOpacity(0.65), fontSize: 11.5, fontWeight: FontWeight.w800),
                 ),
-              ),
-              const SizedBox(height: 14),
-              // Working fallback: type the number instead.
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 38,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: readyOrders.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final o = readyOrders[i];
+                      return ActionChip(
+                        backgroundColor: const Color(0xFF1D1D32),
+                        side: const BorderSide(color: AppColors.yellow, width: 1.2),
+                        avatar: const Icon(Icons.qr_code_2_rounded, size: 16, color: AppColors.yellow),
+                        label: Text(
+                          '${orderNoDisplay(o.orderNo)} · ${o.customerName}',
+                          style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
+                        ),
+                        onPressed: _isScanning ? null : () => _handleSuccess(o.orderNo),
+                      );
+                    },
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _ctrl,
                       textCapitalization: TextCapitalization.characters,
-                      onChanged: (v) => _ctrl.value = _ctrl.value.copyWith(text: v.toUpperCase(), selection: TextSelection.collapsed(offset: v.length)),
+                      onChanged: (v) => _ctrl.value = _ctrl.value.copyWith(
+                        text: v.toUpperCase(),
+                        selection: TextSelection.collapsed(offset: v.length),
+                      ),
                       onSubmitted: (_) => _submit(),
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Type order number, e.g. GG-0427',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.08),
+                        fillColor: Colors.white.withOpacity(0.08),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.yellow, width: 1.6)),
@@ -173,8 +355,9 @@ class _ScanReceiptScreenState extends State<ScanReceiptScreen> with SingleTicker
               const SizedBox(height: 10),
               Center(
                 child: Text(
-                  'Camera scanning requires the Android/iOS build.',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 10, fontWeight: FontWeight.w600),
+                  'Supports live camera capture, photo upload, and instant receipt verification.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ],

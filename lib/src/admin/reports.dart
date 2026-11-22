@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../db.dart';
+import '../export.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'earnings.dart';
@@ -146,7 +147,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              GhostButton(label: 'Export summary', icon: Icons.ios_share_rounded, onPressed: () => showSnack(context, 'Summary exported (demo).')),
+              GhostButton(
+                label: 'Export summary',
+                icon: Icons.ios_share_rounded,
+                onPressed: () => exportCsv(
+                  context: context,
+                  fileName: 'grabgo_reports_${ymd(DateTime.now())}.csv',
+                  title: 'Campus reports · ${_periodLabel(_range)}',
+                  rows: [
+                    ['Campus reports · ${_periodLabel(_range)}'],
+                    const [],
+                    ['Metric', 'Value'],
+                    ['Orders placed', orders.length],
+                    ['Orders last period', prevOrders.length],
+                    ['No-shows', noShows],
+                    ['No-show rate (%)', noShowRate.toStringAsFixed(1)],
+                    ['Previous no-show rate (%)', prevRate.toStringAsFixed(1)],
+                    ['No-show rate change (pp)', rateDelta?.toStringAsFixed(1) ?? 'n/a'],
+                    const [],
+                    ['Popular dishes', 'Units sold'],
+                    for (final d in dishes) [d.key, d.value],
+                  ],
+                ),
+              ),
             ],
           ),
         );

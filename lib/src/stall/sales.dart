@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../db.dart';
+import '../export.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
@@ -187,7 +188,25 @@ class _StallSalesReportScreenState extends State<StallSalesReportScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              GhostButton(label: 'Export summary', icon: Icons.ios_share_rounded, onPressed: () => showSnack(context, 'Summary exported (demo).')),
+              GhostButton(
+                label: 'Export summary',
+                icon: Icons.ios_share_rounded,
+                onPressed: () => exportCsv(
+                  context: context,
+                  fileName: 'grabgo_sales_${ymd(DateTime.now())}.csv',
+                  title: '${stall.name} sales · ${_periodLabel(_range)}',
+                  rows: csvReport('${stall.name} sales · ${_periodLabel(_range)}', ['Order', 'Date', 'Pickup', 'Customer', 'Items', 'Method', 'Status', 'Total'], [
+                    for (final o in orders)
+                      [o.orderNo, '${shortDate(o.placedAt)} ${clockTime(o.placedAt)}', o.slotLabel, o.customerName, o.itemsSummary, o.payment.name, o.status.name, o.total.toStringAsFixed(2)],
+                  ])
+                    ..addAll([
+                      const [],
+                      ['Paid orders', payments.length],
+                      ['Gross sales (PHP)', gross.toStringAsFixed(2)],
+                      ['Average per paid order (PHP)', avg.toStringAsFixed(2)],
+                    ]),
+                ),
+              ),
             ],
           ),
         );
@@ -349,7 +368,26 @@ class StallEarningsScreen extends StatelessWidget {
               const SizedBox(height: 10),
               const Text('The share rate is set by the canteen office.', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
               const SizedBox(height: 14),
-              GhostButton(label: 'Export earnings report', icon: Icons.ios_share_rounded, onPressed: () => showSnack(context, 'Earnings report exported (demo).')),
+              GhostButton(
+                label: 'Export earnings report',
+                icon: Icons.ios_share_rounded,
+                onPressed: () => exportCsv(
+                  context: context,
+                  fileName: 'grabgo_earnings_${ymd(DateTime.now())}.csv',
+                  title: '${stall.name} earnings · $label',
+                  rows: csvReport('${stall.name} earnings · $label', ['Payout', 'Period', 'Gross (PHP)', 'Share 5% (PHP)', 'Net (PHP)', 'Status'], [
+                    for (final p in payouts)
+                      [p.periodLabel, p.periodLabel, p.gross.toStringAsFixed(2), p.share.toStringAsFixed(2), p.net.toStringAsFixed(2), p.status.name],
+                  ])
+                    ..addAll([
+                      const [],
+                      ['This week gross (PHP)', gross.toStringAsFixed(2)],
+                      ['Canteen share 5% (PHP)', share.toStringAsFixed(2)],
+                      ['Stall net (PHP)', net.toStringAsFixed(2)],
+                      ['Counter-paid orders', counterCount],
+                    ]),
+                ),
+              ),
             ],
           ),
         );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../db.dart';
+import '../export.dart';
 import '../theme.dart';
 import '../widgets.dart';
 // StallArtCircle now lives in widgets.dart
@@ -158,7 +159,25 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
                 onPressed: () => _markAllPaid(context, stalls, perStall, rate, label),
               ),
               const SizedBox(height: 8),
-              GhostButton(label: 'Export payout report', icon: Icons.ios_share_rounded, onPressed: () => showSnack(context, 'Payout report exported (demo).')),
+              GhostButton(
+                label: 'Export payout report',
+                icon: Icons.ios_share_rounded,
+                onPressed: () => exportCsv(
+                  context: context,
+                  fileName: 'grabgo_payouts_${ymd(DateTime.now())}.csv',
+                  title: 'Canteen payout report · $label',
+                  rows: csvReport('Canteen payout report · $label', ['Stall', 'Gross (PHP)', 'Share 5% (PHP)', 'Net (PHP)', 'Status'], [
+                    for (final s in stalls)
+                      [s.name, perStall[s]!.toStringAsFixed(2), (perStall[s]! * rate).toStringAsFixed(2), (perStall[s]! * (1 - rate)).toStringAsFixed(2), payoutFor(s.id)?.status.name ?? 'not created'],
+                  ])
+                    ..addAll([
+                      const [],
+                      ['Campus total gross (PHP)', gross.toStringAsFixed(2)],
+                      ['Canteen share 5% (PHP)', share.toStringAsFixed(2)],
+                      ['Total net to stalls (PHP)', net.toStringAsFixed(2)],
+                    ]),
+                ),
+              ),
             ],
           ),
         );

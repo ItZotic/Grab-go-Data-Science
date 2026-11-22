@@ -46,6 +46,9 @@ dependencies:
   # Real QR codes on receipts (pure Dart)
   qr_flutter: ^4.1.0
 
+  # Share generated CSV reports via the OS share sheet
+  share_plus: ^10.0.0
+
   # Photo picking for dish + storefront uploads (gallery / camera)
   image_picker: ^1.1.2
 

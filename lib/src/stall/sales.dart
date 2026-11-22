@@ -127,7 +127,7 @@ class _StallSalesReportScreenState extends State<StallSalesReportScreen> {
                       children: [
                         Expanded(child: Text(peso(gross), style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.8))),
                         if (delta != null)
-                          Pill(label: '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(0)}% vs last week', color: const Color(0xFF86EFAC), soft: const Color(0x2234D399)),
+                          Pill(label: '${delta >= 0 ? '+' : ''}${delta.toStringAsFixed(0)}% vs previous period', color: const Color(0xFF86EFAC), soft: const Color(0x2234D399)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -178,7 +178,7 @@ class _StallSalesReportScreenState extends State<StallSalesReportScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Earnings share report', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                            Text('How the 5% canteen share is computed', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                            Text('How the 18% canteen share is computed', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
@@ -296,7 +296,7 @@ class StallEarningsScreen extends StatelessWidget {
         final payments = state.paymentsBetween(stallId: stall.id, from: weekStart, to: weekEnd);
         final gross = state.revenueOf(payments);
         final counterCount = payments.where((o) => o.payment == PayMethod.counter).length;
-        const rate = 0.05;
+        final rate = Database.canteenShareRate;
         final share = gross * rate;
         final net = gross - share;
         final payouts = Database.payouts(campusId, stallId: stall.id);
@@ -326,7 +326,7 @@ class StallEarningsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text('After the 5% canteen share', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB9B7D6))),
+                    const Text('After the 18% canteen share', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB9B7D6))),
                   ],
                 ),
               ),
@@ -342,7 +342,7 @@ class StallEarningsScreen extends StatelessWidget {
                   children: [
                     _shareRow('Gross sales (${payments.length} paid orders, $counterCount counter)', peso(gross)),
                     const SizedBox(height: 6),
-                    _shareRow('Canteen share · 5%', '−${peso(share)}', valueColor: AppColors.redDark),
+                    _shareRow('Canteen share · 18%', '−${peso(share)}', valueColor: AppColors.redDark),
                     const SizedBox(height: 10),
                     const Divider(),
                     const SizedBox(height: 10),
@@ -375,14 +375,14 @@ class StallEarningsScreen extends StatelessWidget {
                   context: context,
                   fileName: 'grabgo_earnings_${ymd(DateTime.now())}.csv',
                   title: '${stall.name} earnings · $label',
-                  rows: csvReport('${stall.name} earnings · $label', ['Payout', 'Period', 'Gross (PHP)', 'Share 5% (PHP)', 'Net (PHP)', 'Status'], [
+                  rows: csvReport('${stall.name} earnings · $label', ['Payout', 'Period', 'Gross (PHP)', 'Share 18% (PHP)', 'Net (PHP)', 'Status'], [
                     for (final p in payouts)
                       [p.periodLabel, p.periodLabel, p.gross.toStringAsFixed(2), p.share.toStringAsFixed(2), p.net.toStringAsFixed(2), p.status.name],
                   ])
                     ..addAll([
                       const [],
                       ['This week gross (PHP)', gross.toStringAsFixed(2)],
-                      ['Canteen share 5% (PHP)', share.toStringAsFixed(2)],
+                      ['Canteen share 18% (PHP)', share.toStringAsFixed(2)],
                       ['Stall net (PHP)', net.toStringAsFixed(2)],
                       ['Counter-paid orders', counterCount],
                     ]),

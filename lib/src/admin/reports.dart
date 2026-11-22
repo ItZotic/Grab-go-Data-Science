@@ -137,7 +137,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Earnings share report', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                            Text('What each stall receives after the 5% cut', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                            Text('What each stall receives after the 18% cut', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),

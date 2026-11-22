@@ -311,7 +311,7 @@ class HelpScreen extends StatelessWidget {
   static const _faqs = [
     ('How do pickup slots work?', 'Pick a 10-minute window like 12:20 – 12:30 PM when you order. We fire the order so it’s ready the moment you arrive at the express lane.'),
     ('What do I show at the lane?', 'Your digital receipt — the screen with the QR and order number. Staff scan or type the order number, check your name and ID, then hand over the meal.'),
-    ('What if I’m late?', 'You get a 10-minute grace period. After that the order is released (marked Expired) and may not be refundable.'),
+    ('What if I’m late?', 'You get a 10-minute grace period. After that the order is released (marked Expired). Since you pay cash at the counter, there is nothing to refund — online-payment refunds are not available yet.'),
     ('Can someone else claim my order?', 'No. Staff verify the order number together with the name and school ID on the receipt.'),
     ('Why is my slot full?', 'Each window is capped at 20 orders. If yours shows Full, pick the next one — windows are first come, first served.'),
     ('How do I pay?', 'Pay at the counter (cash) when you pick up your order — your receipt is marked “Pay at counter”. GCash and QRPh are coming soon.'),

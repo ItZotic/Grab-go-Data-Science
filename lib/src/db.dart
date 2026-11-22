@@ -555,7 +555,7 @@ class Payout {
   DateTime? paidAt;
 
   Map<String, dynamic> toMap() => {'id': id, 'campusId': campusId, 'stallId': stallId, 'stallName': stallName, 'periodLabel': periodLabel, 'gross': gross, 'shareRate': shareRate, 'share': share, 'net': net, 'status': status.name, 'paidAt': paidAt?.toIso8601String()};
-  factory Payout.fromMap(Map m) => Payout(id: m['id'], campusId: m['campusId'], stallId: m['stallId'], stallName: m['stallName'] ?? '', periodLabel: m['periodLabel'] ?? '', gross: (m['gross'] as num?)?.toDouble() ?? 0, shareRate: (m['shareRate'] as num?)?.toDouble() ?? 0.05, share: (m['share'] as num?)?.toDouble() ?? 0, net: (m['net'] as num?)?.toDouble() ?? 0, status: PayoutStatus.values.firstWhere((p) => p.name == m['status'], orElse: () => PayoutStatus.pending), paidAt: DateTime.tryParse(m['paidAt'] ?? ''));
+  factory Payout.fromMap(Map m) => Payout(id: m['id'], campusId: m['campusId'], stallId: m['stallId'], stallName: m['stallName'] ?? '', periodLabel: m['periodLabel'] ?? '', gross: (m['gross'] as num?)?.toDouble() ?? 0, shareRate: (m['shareRate'] as num?)?.toDouble() ?? Database.canteenShareRate, share: (m['share'] as num?)?.toDouble() ?? 0, net: (m['net'] as num?)?.toDouble() ?? 0, status: PayoutStatus.values.firstWhere((p) => p.name == m['status'], orElse: () => PayoutStatus.pending), paidAt: DateTime.tryParse(m['paidAt'] ?? ''));
 }
 
 class Note {
@@ -604,6 +604,10 @@ class Database {
   static const builtInAdminEmail = 'admin@gmail.com';
   static const builtInAdminPassword = 'Grab&Go#Admin2026';
   static const builtInCampusId = 'campus_batstateu';
+
+  /// Share of every collected order that goes to the app owner (canteen share).
+  /// 18% to the app owner, 82% to the stall. Single source of truth.
+  static const double canteenShareRate = 0.18;
 
   /// Subscriptions bound post-login (private collections), cancelled on sign-out.
   static final List<StreamSubscription<QuerySnapshot<Map<String, dynamic>>>> _sessionSubs = [];
@@ -1337,7 +1341,7 @@ class Database {
   static Future<void> updatePayout(Payout payout) async => _db.collection('payouts').doc(payout.id).update(payout.toMap());
 
   static Future<Payout> createPayout({required String campusId, required Stall stall, required String periodLabel, required double gross}) async {
-    const rate = 0.05;
+    final rate = canteenShareRate;
     final id = 'payout_${DateTime.now().microsecondsSinceEpoch}';
     final payout = Payout(id: id, campusId: campusId, stallId: stall.id, stallName: stall.name, periodLabel: periodLabel, gross: gross, shareRate: rate, share: gross * rate, net: gross - gross * rate, status: PayoutStatus.pending);
     await _db.collection('payouts').doc(id).set(payout.toMap());

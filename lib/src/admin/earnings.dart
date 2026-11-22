@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../app_state.dart';
 import '../db.dart';
 import '../export.dart';
@@ -29,7 +29,7 @@ String _periodLabel(String range) {
   return (DateTime(now.year, now.month, 1), DateTime(now.year, now.month + 1, 0));
 }
 
-/// 31 · Earnings share — the canteen's 5% cut and what each stall receives.
+/// 31 · Earnings share — the app owner's 18% cut and what each stall receives.
 class EarningsShareScreen extends StatefulWidget {
   const EarningsShareScreen({super.key});
 
@@ -58,7 +58,7 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
           perStall[s] = sum;
           gross += sum;
         }
-        const rate = 0.05;
+        final rate = Database.canteenShareRate;
         final share = gross * rate;
         final net = gross - share;
 
@@ -126,7 +126,7 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('CANTEEN SHARE · 5%', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.3, color: Color(0xFF8B89B3))),
+                              const Text('CANTEEN SHARE - 18%', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.3, color: Color(0xFF8B89B3))),
                               const SizedBox(height: 3),
                               Text(peso(share), style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.7)),
                             ],
@@ -151,7 +151,7 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
               if (stalls.isEmpty)
                 const Padding(padding: EdgeInsets.symmetric(vertical: 26), child: Text('No active stalls yet.', style: TextStyle(fontSize: 12.5, color: AppColors.muted))),
               const SizedBox(height: 8),
-              const Text('Each stall sees only its own earnings. Rate: 5% per order.', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
+              const Text('Each stall sees only its own earnings. Rate: 18% per order.', style: TextStyle(fontSize: 10.5, color: AppColors.muted, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               PrimaryButton(
                 label: 'Mark pending as paid out',
@@ -166,14 +166,14 @@ class _EarningsShareScreenState extends State<EarningsShareScreen> {
                   context: context,
                   fileName: 'grabgo_payouts_${ymd(DateTime.now())}.csv',
                   title: 'Canteen payout report · $label',
-                  rows: csvReport('Canteen payout report · $label', ['Stall', 'Gross (PHP)', 'Share 5% (PHP)', 'Net (PHP)', 'Status'], [
+                  rows: csvReport('Canteen payout report · $label', ['Stall', 'Gross (PHP)', 'Share 18% (PHP)', 'Net (PHP)', 'Status'], [
                     for (final s in stalls)
                       [s.name, perStall[s]!.toStringAsFixed(2), (perStall[s]! * rate).toStringAsFixed(2), (perStall[s]! * (1 - rate)).toStringAsFixed(2), payoutFor(s.id)?.status.name ?? 'not created'],
                   ])
                     ..addAll([
                       const [],
                       ['Campus total gross (PHP)', gross.toStringAsFixed(2)],
-                      ['Canteen share 5% (PHP)', share.toStringAsFixed(2)],
+                      ['Canteen Share 18% (PHP)', share.toStringAsFixed(2)],
                       ['Total net to stalls (PHP)', net.toStringAsFixed(2)],
                     ]),
                 ),

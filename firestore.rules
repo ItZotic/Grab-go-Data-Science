@@ -19,6 +19,11 @@ service cloud.firestore {
     function isMainAdmin() {
       return signedIn() && role() == 'mainAdmin';
     }
+    /// First-run bootstrap: the built-in admin's Auth email, before the Firestore
+    /// profile exists. Lets the app create the very first admin profile + campus.
+    function isBootstrapAdmin() {
+      return signedIn() && request.auth.token.email == 'admin@gmail.com';
+    }
     function isStallAdmin() {
       return signedIn() && role() == 'stallAdmin';
     }
@@ -29,11 +34,11 @@ service cloud.firestore {
     // ---------- public, pre-login readable (campus info, stalls, menu, slots) ----------
     match /campuses/{id} {
       allow read: if true;
-      allow write: if isMainAdmin();
+      allow write: if isMainAdmin() || isBootstrapAdmin();
     }
     match /stalls/{id} {
       allow read: if true;
-      allow create, delete: if isMainAdmin();
+      allow create, delete: if isMainAdmin() || isBootstrapAdmin();
       // Stall admins may update ONLY the photo + pickup schedule (storefront, hours, per-window limit).
       allow update: if isMainAdmin()
         || (isStallAdmin() && resource.id == stallId() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photo', 'openMin', 'closeMin', 'slotCapacity']));
@@ -86,7 +91,7 @@ service cloud.firestore {
       // Own doc, or your own doc looked up by email, or staff (they manage accounts / verify claims).
       allow read: if signedIn() && (request.auth.uid == id || isStaff() || resource.data.email == request.auth.token.email);
       // Admin creates any account; a new user may create ONLY their own customer profile.
-      allow create: if isMainAdmin()
+      allow create: if isMainAdmin() || isBootstrapAdmin()
         || (signedIn() && request.auth.uid == id && request.resource.data.role == 'customer');
       allow update, delete: if isMainAdmin();
     }
@@ -104,7 +109,7 @@ service cloud.firestore {
     }
     match /payouts/{id} {
       allow read: if isMainAdmin() || (isStallAdmin() && resource.data.stallId == stallId());
-      allow write: if isMainAdmin();
+      allow write: if isMainAdmin() || isBootstrapAdmin();
     }
     match /notifications/{id} {
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || isStaff());
@@ -120,7 +125,7 @@ service cloud.firestore {
     }
     match /meta/{id} {
       allow read: if true;
-      allow write: if isMainAdmin();
+      allow write: if isMainAdmin() || isBootstrapAdmin();
     }
   }
 }

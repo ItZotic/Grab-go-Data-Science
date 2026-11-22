@@ -20,6 +20,21 @@ class _PrepListScreenState extends State<PrepListScreen> {
   String? _window; // slotId filter; null = all windows
   Timer? _tick;
 
+  Future<void> _logout() async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You will need your stall account email and password to sign back in. Your session otherwise stays active even if you close the app.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(style: FilledButton.styleFrom(backgroundColor: AppColors.navy900, foregroundColor: Colors.white), onPressed: () => Navigator.pop(context, true), child: const Text('Log out')),
+        ],
+      ),
+    );
+    if (yes == true) AppState.instance.signOut();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +105,8 @@ class _PrepListScreenState extends State<PrepListScreen> {
                   ),
                 ),
               ),
+                IconButton(tooltip: 'Log out', icon: const Icon(Icons.logout_rounded, color: AppColors.navy900), onPressed: _logout),
+                const SizedBox(width: 6),
             ],
           ),
           body: Column(

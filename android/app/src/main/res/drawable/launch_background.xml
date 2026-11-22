@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Plain brand-yellow boot background: no bitmap, so no extra logo flash.
+         The real logo appears once Flutter draws the auth splash. -->
     <item android:drawable="@color/launch_yellow" />
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/ic_launcher" />
-    </item>
 </layer-list>

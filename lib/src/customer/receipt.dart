@@ -91,6 +91,8 @@ class ReceiptScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  const GrabLogo(size: 48),
+                  const SizedBox(height: 12),
                   const Text('Order no.', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.6, color: AppColors.muted)),
                   const SizedBox(height: 2),
                   SelectableText(

@@ -78,7 +78,7 @@ class StockUpdateScreen extends StatelessWidget {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(18, 4, 18, 90),
                         itemCount: dishes.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, i) => _StockRow(dish: dishes[i], onEditExact: () => _editExact(context, dishes[i])),
                       ),
               ),
@@ -111,7 +111,7 @@ class _StockRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: low || soldOut ? AppColors.red.withValues(alpha: 0.4) : AppColors.line, width: low || soldOut ? 1.4 : 1),
+        border: Border.all(color: low || soldOut ? AppColors.red.withOpacity(0.4) : AppColors.line, width: low || soldOut ? 1.4 : 1),
       ),
       child: Row(
         children: [

@@ -75,26 +75,28 @@ class SplashScreen extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onSkip,
         child: SafeArea(
-          child: Stack(
-            alignment: Alignment.center,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Brand block centered in the available space.
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  GrabLogo(size: 118, splash: true),
-                  SizedBox(height: 22),
-                  Text('Grab&Go', style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppColors.navy900, letterSpacing: -1.2, height: 1)),
-                  SizedBox(height: 8),
-                  Text('Order ahead. Eat longer.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.navy800)),
-                ],
+              // Everything except the footer takes the full height; the brand sits in its center.
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      GrabLogo(size: 118, splash: true),
+                      SizedBox(height: 22),
+                      Text('Grab&Go', textAlign: TextAlign.center, style: TextStyle(fontSize: 42, fontWeight: FontWeight.w900, color: AppColors.navy900, letterSpacing: -1.2, height: 1)),
+                      SizedBox(height: 8),
+                      Text('Order ahead. Eat longer.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.navy800)),
+                    ],
+                  ),
+                ),
               ),
               // Footer pinned to the bottom.
-              const Positioned(
-                bottom: 26,
-                left: 18,
-                right: 18,
+              const Padding(
+                padding: EdgeInsets.only(bottom: 26),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
